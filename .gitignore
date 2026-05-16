@@ -1,2 +1,5 @@
 build/
+SimpleAmqpClient/
+onnxruntime/
+onnxruntime-linux-x64-1.18.0/
 /temp.cpp
