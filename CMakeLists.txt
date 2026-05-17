@@ -60,7 +60,7 @@ include_directories(
 
 # Main
 set(MAIN_SRC
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
+    ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 
 # Http Server
