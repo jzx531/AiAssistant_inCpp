@@ -213,13 +213,17 @@ int SslConnection::bioWrite(BIO* bio, const char* data, int len)
     return len;
 }
 
-int SslConnection::bioRead(BIO* bio, char* out, int len) 
+int SslConnection::bioRead(BIO* bio, char* data, int len) 
 {
     SslConnection* conn = static_cast<SslConnection*>(BIO_get_data(bio));
-    if(!conn) return -1;
-    
+    if (!conn) return -1;
+
     size_t readable = conn->readBuffer_.readableBytes();
-    if(readable == 0) return -1;
+    if (readable == 0) 
+    {
+        return -1;  // 无数据可读
+    }
+
     size_t toRead = std::min(static_cast<size_t>(len), readable);
     memcpy(data, conn->readBuffer_.peek(), toRead);
     conn->readBuffer_.retrieve(toRead);
