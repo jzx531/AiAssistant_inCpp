@@ -23,6 +23,12 @@ private:
     bool setupProtocol();
     void setupSessionCache();
     static void handleSslError(const char *msg);
+
+
+private:
+    SSL_CTX*  ctx_; // SSL上下文
+    SslConfig config_; // SSL配置
+    
 };
 
 }
