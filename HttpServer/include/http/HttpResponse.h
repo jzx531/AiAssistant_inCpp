@@ -11,15 +11,15 @@ public:
     enum HttpStatusCode
     {
         Unknown,
-        200Ok = 200,
-        204NoContent = 204,
-        301MovedPermanently = 301,
-        400BadRequest = 400,
-        401Unauthorized = 401,
-        403Forbidden = 403,
-        404NotFound = 404,
-        409Conflict = 409,
-        500InternalServerError = 500,
+        Ok200 = 200,
+        NoContent204 = 204,
+        MovedPermanently301 = 301,
+        BadRequest400 = 400,
+        Unauthorized401 = 401,
+        Forbidden403 = 403,
+        NotFound404 = 404,
+        Conflict409 = 409,
+        InternalServerError500 = 500,
     };
 
     HttpResponse(bool close = true):statusCode_(Unknown),closeConnection_(close){}
