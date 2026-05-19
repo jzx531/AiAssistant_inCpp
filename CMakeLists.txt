@@ -59,8 +59,8 @@ include_directories(
 # =========================
 
 # Main
-set(MAIN_SRC
-    ${PROJECT_SOURCE_DIR}/src/*.cpp
+file(GLOB_RECURSE MAIN_SRC
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
 )
 
 # Http Server
@@ -141,6 +141,8 @@ target_compile_options(AiAssistant_inCpp PRIVATE
 include(CTest)
 enable_testing()
 
+add_subdirectory(test)
+
 # =========================
 # CPack
 # =========================
@@ -164,4 +166,3 @@ message(STATUS "Main Source: ${MAIN_SRC}")
 message(STATUS "Project Sources: ${PROJECT_SRC}")
 message(STATUS "HTTP Server Sources: ${HTTP_SERVER_SRC}")
 message(STATUS "Chat Server Sources: ${CHAT_SERVER_SRC}")
-

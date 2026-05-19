@@ -1,5 +1,10 @@
 #include "../../include/http/HttpRequest.h"
 
+#include <cassert>
+#include <cctype>
+#include <cstdlib>
+#include <utility>
+
 namespace http
 {
 void HttpRequest::setReceiveTime(muduo::Timestamp t)
@@ -9,7 +14,7 @@ void HttpRequest::setReceiveTime(muduo::Timestamp t)
 
 bool HttpRequest::setMethod(const char *start,const char *end)
 {
-    assert(method_ == kInvalid);
+    assert(method_ == Invalid);
     std::string m(start,end);
     if(m == "GET")
     {
@@ -52,7 +57,7 @@ void HttpRequest::setPathParameters(const std::string &key,const std::string &va
     pathParameters_[key] = value;
 }
 
-std::string HttpRequest::getPathParameters(const std::string &key) const
+std::string HttpRequest::getPathParameter(const std::string &key) const
 {
     auto it = pathParameters_.find(key);
     if(it != pathParameters_.end())
@@ -62,7 +67,7 @@ std::string HttpRequest::getPathParameters(const std::string &key) const
     return "";
 }
 
-std::string HttpRequest::getQueryParameters(const std::string &key) const
+std::string HttpRequest::getQueryParameter(const std::string &key) const
 {
     auto it = queryParameters_.find(key);
     if (it != queryParameters_.end())

@@ -47,7 +47,7 @@ bool HttpContext::parseRequest(Buffer *buf,Timestamp receiveTime)
                         std::string contentLength = request_.getHeader("Content-Length");
                         if (!contentLength.empty())
                         {
-                            request_.setContentLength(std::atoi(contentLength));
+                            request_.setContentLength(std::atoi(contentLength.c_str()));
                             if(request_.contentLength() > 0)
                             {
                                 state_ = ExpectBody;

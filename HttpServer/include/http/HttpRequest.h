@@ -2,6 +2,7 @@
 #define HTTP_REQUEST_H
 
 #include <map>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 
@@ -27,7 +28,7 @@ public:
     void setPathParameters(const std::string &key,const std::string &value);
     std::string getPathParameter(const std::string &key) const;
 
-    void setQueryParameters(const std::string &start,const std::string &end);
+    void setQueryParameters(const char *start,const char *end);
     std::string getQueryParameter(const std::string &key) const;
 
     void setVersion(std::string v)
@@ -35,6 +36,10 @@ public:
         version_ = v;
     }
     std::string getVersion() const
+    {
+        return version_;
+    }
+    std::string version() const
     {
         return version_;
     }

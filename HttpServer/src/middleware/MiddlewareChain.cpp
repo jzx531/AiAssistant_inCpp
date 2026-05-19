@@ -10,7 +10,7 @@ void MiddlewareChain::addMiddleware(std::shared_ptr<Middleware> middleware)
     middlewares_.push_back(middleware);
 }
 
-void MiddlewareChain::processingBefore(HttpRequest& request)
+void MiddlewareChain::processBefore(HttpRequest& request)
 {
     for(auto & middleware : middlewares_)
     {
