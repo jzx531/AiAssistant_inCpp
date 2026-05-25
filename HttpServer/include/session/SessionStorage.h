@@ -1,6 +1,9 @@
 #ifndef SESSION_STORAGE_H
 #define SESSION_STORAGE_H
 
+#include "Session.h"
+#include <memory>
+
 namespace http
 {
 namespace session

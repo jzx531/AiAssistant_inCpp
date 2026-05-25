@@ -22,7 +22,7 @@ public:
     AIHelper();
 
     //设置默认模型
-    void setStrategy(std::shared_ptr<AIStrategty> strat);
+    void setStrategy(std::shared_ptr<AIStrategy> strat);
 
     // 添加一条消息
     void addMessage(int userId, const std::string& userName, bool is_user, const std::string& userInput, std::string sessionId);

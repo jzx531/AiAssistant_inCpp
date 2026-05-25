@@ -44,7 +44,7 @@ void CorsMiddleware::after(HttpResponse & response)
     }
 }
 
-bool CorsMiddleware::isOriginAllowed(const std::string &origin) 
+bool CorsMiddleware::isOriginAllowed(const std::string &origin) const
 {
     return config_.allowedOrigins.empty() || 
         std::find(config_.allowedOrigins.begin(), config_.allowedOrigins.end(), "*")!= config_.allowedOrigins.end() ||
@@ -59,7 +59,7 @@ void CorsMiddleware::handlePreflightRequest(const HttpRequest &request,
     if(!isOriginAllowed(origin))
     {
         LOG_WARN << "Origin not allowed :" << origin;
-        response.SetStatusCode(HttpResponse::Forbidden403);
+        response.setStatusCode(HttpResponse::Forbidden403);
         return;
     }
 

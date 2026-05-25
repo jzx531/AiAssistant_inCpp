@@ -25,8 +25,10 @@ DbConnection::DbConnection(const std::string& host,
             conn_->setSchema(database_);
 
             //设置连接属性
-            conn_->setClientOption("OPT_RECONNECT", true);
-            conn_->setClientOption("OPT_CONNECT_TIMEOUT", 10);
+            const sql::SQLString reconnect = "true";
+            const sql::SQLString connectTimeout = "10";
+            conn_->setClientOption("OPT_RECONNECT", reconnect);
+            conn_->setClientOption("OPT_CONNECT_TIMEOUT", connectTimeout);
             conn_->setClientOption("multi_statements", "false");
             
             // 设置字符集

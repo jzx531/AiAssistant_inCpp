@@ -13,8 +13,9 @@ public:
 
     void handle(const http::HttpRequest& req, http::HttpResponse* resp) override;
 private:
+    int queryUserId(const std::string& username, const std::string& password);
     ChatServer * server_;
     http::MysqlUtil mysqlUtil_;
-}
+};
 
 #endif

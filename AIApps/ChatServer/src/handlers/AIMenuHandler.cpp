@@ -32,7 +32,7 @@ void AIMenuHandler::handle(const http::HttpRequest& req, http::HttpResponse* res
 
         std::vector<char> buffer(fileOperater.size());
         fileOperater.readFile(buffer);
-        std::string htmlContent(buffer.begin(), buffer.size());
+        std::string htmlContent(buffer.begin(), buffer.end());
 
         size_t headEnd = htmlContent.find("</head>");
         if (headEnd != std::string::npos)

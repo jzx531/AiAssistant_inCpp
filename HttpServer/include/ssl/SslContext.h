@@ -16,7 +16,8 @@ public:
     ~SslContext();
 
     bool initialize();
-    SSL_CTX *get() const { return m_sslContext.get(); }
+    SSL_CTX *get() const { return ctx_; }
+    SSL_CTX *getNativeHandle() const { return ctx_; }
 
 private:
     bool loadCertificates();

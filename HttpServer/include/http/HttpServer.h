@@ -14,6 +14,7 @@
 #include <muduo/net/TcpServer.h>
 #include <muduo/net/EventLoop.h>
 #include <muduo/base/Logging.h>
+#include <muduo/base/Timestamp.h>
 
 #include "HttpContext.h"
 #include "HttpRequest.h"
@@ -55,12 +56,22 @@ public:
     //注册静态路由处理器
     void Get(const std::string &path,const HttpCallback & cb)
     {
-        router_.registerHandler(HttpRequest::GET,path,cb);
+        router_.registerCallback(HttpRequest::Get,path,cb);
+    }
+
+    void Get(const std::string &path,router::Router::HandlerPtr handler)
+    {
+        router_.registerHandler(HttpRequest::Get,path,std::move(handler));
     }
 
     void Post(const std::string &path,const HttpCallback & cb)
     {
-        router_.registerHandler(HttpRequest::Post,path,handler);
+        router_.registerCallback(HttpRequest::Post,path,cb);
+    }
+
+    void Post(const std::string &path,router::Router::HandlerPtr handler)
+    {
+        router_.registerHandler(HttpRequest::Post,path,std::move(handler));
     }
 
     //注册动态路由处理器
@@ -96,7 +107,7 @@ public:
 private:
     void initialize();
     void onConnection(const muduo::net::TcpConnectionPtr& conn);
-    void onMessage(const muduo::net::TcpConnectionPtr& conn,muduo::net::Buffer *buf,muduo::TimeStamp receiveTime);
+    void onMessage(const muduo::net::TcpConnectionPtr& conn,muduo::net::Buffer *buf,muduo::Timestamp receiveTime);
     void onRequest(const muduo::net::TcpConnectionPtr &,const HttpRequest&);
     void handleRequest(const HttpRequest &req, HttpResponse *resp);
 

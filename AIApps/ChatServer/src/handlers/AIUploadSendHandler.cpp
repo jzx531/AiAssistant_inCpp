@@ -61,7 +61,7 @@ void AIUploadSendHandler::handle(const http::HttpRequest& req, http::HttpRespons
 
         std::string successBody = successResp.dump(4);
 
-        resp->setStatusLine(req.getVersion(), http::HttpResponse::k200Ok, "OK");
+        resp->setStatusLine(req.getVersion(), http::HttpResponse::Ok200, "OK");
         resp->setCloseConnection(false);
         resp->setContentType("application/json");
         resp->setContentLength(successBody.size());

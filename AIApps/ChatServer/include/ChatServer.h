@@ -53,7 +53,7 @@ public:
 private:
 	friend class ChatLoginHandler;
 	friend class ChatRegisterHandler;
-	friend  ChatLogoutHandler;
+	friend class ChatLogoutHandler;
 	friend class ChatHandler;
 	friend class ChatEntryHandler;
 	friend class ChatSendHandler;

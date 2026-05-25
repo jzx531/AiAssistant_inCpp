@@ -93,8 +93,8 @@ void SslConnection::send(const void* data,size_t len)
     }
 }
 
-void SslConnection::onRead(const TcpConnectionPtr& conn, BufferPtr buf, 
-                         muduo::Timestamp time) 
+void SslConnection::onRead(const TcpConnectionPtr& conn, muduo::net::Buffer* buf,
+                          muduo::Timestamp time) 
 {
     if(state_ == SSLState::HANDSHAKE){
         //将数据写入BIO
@@ -103,17 +103,19 @@ void SslConnection::onRead(const TcpConnectionPtr& conn, BufferPtr buf,
         handleHandshake();
         return;
     }else if(state_ == SSLState::ESTABLISHED){
+        BIO_write(readBio_, buf->peek(), buf->readableBytes());
+        buf->retrieve(buf->readableBytes());
+
         //解密数据
         char decryptedData[4096];
         int ret = SSL_read(ssl_, decryptedData, sizeof(decryptedData));
         if(ret > 0){
-            //创建新的buffer，存储解密后的数据
-            muduo::net::Buffer decryptedBuffer;
-            decryptedBuffer.append(decryptedData, ret);
+            decryptedBuffer_.retrieveAll();
+            decryptedBuffer_.append(decryptedData, ret);
             
             // 调用上层回调处理解密后的数据
             if (messageCallback_) {
-                messageCallback_(conn, &decryptedBuffer, time);
+                messageCallback_(conn, &decryptedBuffer_, time);
             }
         }
     }

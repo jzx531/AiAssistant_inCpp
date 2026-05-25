@@ -24,7 +24,7 @@ using namespace http;
 ChatServer::ChatServer(int port,
                        const std::string& name,
                        muduo::net::TcpServer::Option option)
-                       :httpServer_(port,name,option)
+                       :httpServer_(port,name,false,option)
 {
     initialize();
 }
@@ -39,8 +39,8 @@ void ChatServer::initialize(){
 
 }
 
-void ChatServer::initiChatMessage(){
-    std::cout << "initiChatMessage start" << std::endl;
+void ChatServer::initChatMessage(){
+    std::cout << "initChatMessage start" << std::endl;
     readDataFromMySQL();
     std::cout << "initChatMessage success" << std::endl;
 }
@@ -175,7 +175,7 @@ void ChatServer::packageResp(const std::string& version,
     {
         LOG_ERROR << "Error in packageResp: " << e.what();
 
-        resp->setStatusCode(http::HttpResponse::k500InternalServerError);
+        resp->setStatusCode(http::HttpResponse::InternalServerError500);
         resp->setStatusMessage("Internal Server Error");
         resp->setCloseConnection(true);
     }

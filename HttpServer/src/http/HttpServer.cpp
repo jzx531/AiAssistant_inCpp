@@ -1,6 +1,6 @@
 #include "../../include/http/HttpServer.h"
 
-#include <any>
+#include <boost/any.hpp>
 #include <functional>
 #include <memory>
 
@@ -10,7 +10,7 @@ namespace http
 // 默认http回应函数
 void defaultHttpCallback(const HttpRequest &, HttpResponse *resp)
 {
-    resp->setStatusCode(HttpResponse::k404NotFound);
+    resp->setStatusCode(HttpResponse::NotFound404);
     resp->setStatusMessage("Not Found");
     resp->setCloseConnection(true);
 }
@@ -57,7 +57,7 @@ void HttpServer::onConnection(const muduo::net::TcpConnectionPtr& conn)
     {
         if(useSSL_)
         {
-            auto sslConn = std::make_unique<ssl::SslConnection>(conn, sslCtx_->context());
+            auto sslConn = std::make_unique<ssl::SslConnection>(conn, sslCtx_.get());
             sslConn->setMessageCallback(
                 std::bind(&HttpServer::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
             sslConns_[conn] = std::move(sslConn);
@@ -79,29 +79,30 @@ void HttpServer::onMessage(const muduo::net::TcpConnectionPtr &conn,
 {
     try
     {
+        auto* contextAny = conn->getMutableContext();
+        auto* context = boost::any_cast<HttpContext>(contextAny);
+        if (context == nullptr)
+        {
+            conn->send("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+            conn->shutdown();
+            return;
+        }
+
         // 这层判断只是代表是否支持ssl
         if (useSSL_)
         {
             LOG_INFO << "onMessage useSSL_ is true";
             //1.查找对应的SSL连接
             auto it = sslConns_.find(conn);
-            //2. SSL连接处理数据
-            it->second->onRead(conn,buf,receiveTime);
-
-            //3.如果SSL握手还未完成,直接返回
-            if (!it->second->isHandshakeCompleted())
+            if (it == sslConns_.end() || !it->second)
             {
-                LOG_INFO << "onMessage sslConns_ is not empty";
+                conn->send("HTTP/1.1 400 Bad Request\r\n\r\n");
+                conn->shutdown();
                 return;
             }
-
-            //4. 从SSL连接的解密缓冲区获取数据
-            muduo::net::Buffer *decryptedBuf = it->second->getDecryptedBuffer();
-                if (decryptedBuf->readableBytes() == 0)
-                    return; // 没有解密后的数据
-            // 5. 使用解密后的数据进行HTTP 处理
-            buf = decryptedBuf; // 将 buf 指向解密后的数据
-            LOG_INFO << "onMessage decryptedBuf is not empty";
+            //2. SSL连接处理数据
+            it->second->onRead(conn,buf,receiveTime);
+            return;
         }
 
         // HttpContext对象用于解析buf中的请求报文,并把报文的关键信息封装到

@@ -17,7 +17,7 @@ public:
     explicit CorsMiddleware(const CorsConfig& config = CorsConfig::defaultConfig());
 
     void before(HttpRequest &request) override;
-    void after(HttpRequest &response) override;
+    void after(HttpResponse &response) override;
     std::string join(const std::vector<std::string> &strings,const std::string& delimiter);
 
 private:

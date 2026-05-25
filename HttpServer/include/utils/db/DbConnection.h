@@ -47,7 +47,7 @@ public:
             std::unique_ptr<sql::PreparedStatement> stmt(
                 conn_->prepareStatement(sql)
             );
-            bindParams(stmt.get(), std::forward<Args>(args)...);
+            bindParams(stmt.get(), 1, std::forward<Args>(args)...);
             return stmt->executeQuery();
         }
         catch (const sql::SQLException& e) 
@@ -57,9 +57,30 @@ public:
         }
     }
 
+    template<typename... Args>
+    int executeUpdate(const std::string& sql, Args&&... args)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        try
+        {
+            std::unique_ptr<sql::PreparedStatement> stmt(
+                conn_->prepareStatement(sql)
+            );
+            bindParams(stmt.get(), 1, std::forward<Args>(args)...);
+            return stmt->executeUpdate();
+        }
+        catch (const sql::SQLException& e)
+        {
+            LOG_ERROR << "Update failed: " << e.what() << ", SQL: " << sql;
+            throw DbException(e.what());
+        }
+    }
+
     bool ping(); //添加检测连接是否有效的方法
 
 private:
+    void bindParams(sql::PreparedStatement*){}
+
     //辅助函数:递归终止条件
     void bindParams(sql::PreparedStatement* ,int){}
 

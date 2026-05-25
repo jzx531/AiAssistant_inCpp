@@ -8,7 +8,7 @@ MQManager::MQManager(size_t poolSize):poolSize_(poolSize),counter_(0)
     {
         auto conn = std::make_shared<MQConn>();
         //Create
-        conn->channel = AmqpClient::Channel::ptr_t channel = AmqpClient::Channel::Create(
+        conn->channel = AmqpClient::Channel::Create(
             "localhost",  // RabbitMQ 服务器主机名或 IP
             5672,         // AMQP 协议默认端口
             "guest",      // 用户名

@@ -3,7 +3,7 @@
 static size_t onWriteData(void *ptr,size_t size,size_t nmemb,void * userp)
 {
     std::string * str =  static_cast<std::string *>(userp);
-    str->append((char *) buffer,size*nmemb);
+    str->append(static_cast<char *>(ptr),size * nmemb);
     return size*nmemb;
 }
 

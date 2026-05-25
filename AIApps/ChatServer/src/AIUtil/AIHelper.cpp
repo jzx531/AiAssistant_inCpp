@@ -56,7 +56,7 @@ std::string AIHelper::chat(int userId,std::string userName,std::string sessionId
     std::cout << "tempUserQuestion is "<< tempUserQuestion << std::endl;
     messages.push_back({tempUserQuestion,0});
 
-    json firstReq = strategy->buildRequest(this->messsages);
+    json firstReq = strategy->buildRequest(this->messages);
     json firstResp = executeCurl(firstReq);
     std::string aiResult = strategy->parseResponse(firstResp);
     // 用完立即移除提示词

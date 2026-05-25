@@ -19,15 +19,15 @@ class SslConnection : muduo::noncopyable
 {
 public:
     using TcpConnectionPtr = std::shared_ptr<muduo::net::TcpConnection>;
-    using BufferPtr = std::shared_ptr<muduo::net::TcpConnection>;
 
     SslConnection(const TcpConnectionPtr &conn,SslContext *ctx);
     ~SslConnection();
 
     void startHandshake();
     void send(const void* data, size_t len);
-    void onRead(const TcpConnectionPtr &conn,BufferPtr buf,muduo::Timestamp time);
+    void onRead(const TcpConnectionPtr &conn,muduo::net::Buffer* buf,muduo::Timestamp time);
     bool isHandshakeCompleted() const{ return state_ == SSLState::ESTABLISHED; }
+    muduo::net::Buffer* getDecryptedBuffer() { return &decryptedBuffer_; }
     //SSL BIO 操作回调
     static int bioWrite(BIO *bio, const char *data,int len);
     static int bioRead(BIO *bio, char *data, int len);

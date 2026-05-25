@@ -34,7 +34,7 @@ void ChatCreateAndSendHandler::handle(const http::HttpRequest& req, http::HttpRe
             modelType = j.contains("modelType") ? j["modelType"].get<std::string>() : "1";
         }
 
-        AISessionGenerator generator;
+        AISessionIdGenerator generator;
         std::string sessionId = generator.generate();
         std::cout << "esessionId" << sessionId << std::endl;
 
@@ -48,7 +48,7 @@ void ChatCreateAndSendHandler::handle(const http::HttpRequest& req, http::HttpRe
                     sessionId,
                     std::make_shared<AIHelper>()
                 );
-                server_->sessionIdsMap[userId].push_back(sessionId);
+                server_->sessionsIdsMap[userId].push_back(sessionId);
             }
             AIHelperPtr = userSessions[sessionId];
         }

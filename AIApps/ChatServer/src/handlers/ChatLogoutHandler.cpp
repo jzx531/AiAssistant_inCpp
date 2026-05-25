@@ -5,7 +5,7 @@ void ChatLogoutHandler::handle(const http::HttpRequest& req, http::HttpResponse*
   auto contentType = req.getHeader("Content-Type");
   if (contentType.empty() || contentType != "application/json" || req.getBody().empty())
   {
-    resp->setStatusLine(req.getVersion(), http::HttpResponse::BadRequest400, "Bad Request"  )
+    resp->setStatusLine(req.getVersion(), http::HttpResponse::BadRequest400, "Bad Request");
     resp->setCloseConnection(true);
     resp->setContentType("application/json");
     resp->setContentLength(0);

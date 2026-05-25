@@ -19,7 +19,7 @@ std::shared_ptr<Session> MemorySessionStorage::load(const std::string &sessionId
     auto it = sessions_.find(sessionId);
     if(it != sessions_.end())
     {
-        if(!it->second.isExpired())
+        if(it->second && !it->second->isExpired())
         {
             return it->second;
         }

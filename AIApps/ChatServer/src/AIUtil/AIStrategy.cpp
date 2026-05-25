@@ -33,7 +33,7 @@ json AliyunStrategy::buildRequest(const std::vector<std::pair<std::string,long l
     return payload;
 }
 
-std::string AliyunStrategy::parseResponse(const json & response)
+std::string AliyunStrategy::parseResponse(const json & response) const
 {
     if(response.contains("choices") && !response["choices"].empty()){
         return response["choices"][0]["message"]["content"];
@@ -46,7 +46,7 @@ std::string DouBaoStrategy::getApiUrl() const {
     return "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 }
 
-std::string DouBaoStrategy::getApikey() const{
+std::string DouBaoStrategy::getApiKey() const{
     return apiKey_;
 }
 
