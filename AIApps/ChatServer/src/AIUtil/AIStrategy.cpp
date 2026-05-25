@@ -118,3 +118,51 @@ std::string AliyunRAGStrategy::parseResponse(const json& response) const {
     }
     return {};
 }
+
+std::string AliyunMcpStrategy::getApiUrl() const {
+    return "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+}
+
+std::string AliyunMcpStrategy::getApiKey()const {
+    return apiKey_;
+}
+
+
+std::string AliyunMcpStrategy::getModel() const {
+    return "qwen-plus";
+}
+
+
+json AliyunMcpStrategy::buildRequest(const std::vector<std::pair<std::string, long long>>& messages) const {
+    json payload;
+    payload["model"] = getModel();
+    json msgArray = json::array();
+
+    for (size_t i = 0; i < messages.size(); ++i) {
+        json msg;
+        if (i % 2 == 0) {
+            msg["role"] = "user";
+        }
+        else {
+            msg["role"] = "assistant";
+        }
+        msg["content"] = messages[i].first;
+        msgArray.push_back(msg);
+    }
+    payload["messages"] = msgArray;
+    return payload;
+}
+
+
+std::string AliyunMcpStrategy::parseResponse(const json& response) const {
+    if (response.contains("choices") && !response["choices"].empty()) {
+        return response["choices"][0]["message"]["content"];
+    }
+    return {};
+}
+
+
+static StrategyRegister<AliyunStrategy> regAliyun("1");
+static StrategyRegister<DouBaoStrategy> regDoubao("2");
+static StrategyRegister<AliyunRAGStrategy> regAliyunRag("3");
+static StrategyRegister<AliyunMcpStrategy> regAliyunMcp("4");
