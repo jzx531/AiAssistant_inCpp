@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能五子棋</title>
+    <link rel="stylesheet" href="./gomoku.css">
+</head>
+<body>
+    <main class="page">
+        <section class="panel">
+            <div class="panel__header">
+                <div>
+                    <h1>智能五子棋</h1>
+                    <p class="subtitle">先完成人机对弈，再逐步扩展 AI 分析能力。</p>
+                </div>
+                <div class="status" id="status">等待开始</div>
+            </div>
+
+            <div class="toolbar">
+                <button id="startBtn" type="button">开始新对局</button>
+                <button id="resetBtn" type="button">重置棋盘</button>
+                <button id="aiBtn" type="button">让 AI 落子</button>
+            </div>
+
+            <div class="layout">
+                <section class="board-card">
+                    <div class="board-wrap">
+                        <canvas id="gomokuBoard" width="960" height="960" aria-label="五子棋棋盘"></canvas>
+                    </div>
+                </section>
+
+                <aside class="sidebar">
+                    <section class="info-card">
+                        <h2>对局信息</h2>
+                        <dl class="info-list">
+                            <div>
+                                <dt>棋盘大小</dt>
+                                <dd>32 x 32</dd>
+                            </div>
+                            <div>
+                                <dt>当前回合</dt>
+                                <dd id="turnText">黑子</dd>
+                            </div>
+                            <div>
+                                <dt>对局模式</dt>
+                                <dd>玩家 vs AI</dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <section class="info-card">
+                        <h2>接口约定</h2>
+                        <ul class="api-list">
+                            <li><code>GET /gomoku/state</code></li>
+                            <li><code>POST /gomoku/move</code></li>
+                            <li><code>POST /gomoku/ai-move</code></li>
+                            <li><code>POST /gomoku/reset</code></li>
+                        </ul>
+                    </section>
+
+                    <section class="info-card">
+                        <h2>最近一步</h2>
+                        <p id="lastMove">暂无</p>
+                    </section>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <script src="./gomoku.js"></script>
+</body>
+</html>
