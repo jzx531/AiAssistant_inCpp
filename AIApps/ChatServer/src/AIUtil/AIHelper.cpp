@@ -191,8 +191,23 @@ std::string AIHelper::escapeString(const std::string& input) {
     return output;
 }
 
+void AIHelper::pushMessageToMysql(int userId, const std::string& userName, bool is_user, const std::string& userInput,long long ms, std::string sessionId) {
+    std::string safeUserName = escapeString(userName);
+    std::string safeUserInput = escapeString(userInput);
 
+    std::string sql = "INSERT INTO chat_message (id, username, session_id, is_user, content, ts) VALUES ("
+        + std::to_string(userId) + ", "
+        + "'" + safeUserName + "', "
+        + sessionId + ", "
+        + std::to_string(is_user ? 1 : 0) + ", "
+        + "'" + safeUserInput + "', "
+        + std::to_string(ms) + ")";
 
+    //改成消息队列异步执行mysql操作，用于流量削峰与解耦逻辑
+    //mysqlUtil_.executeUpdate(sql);
+
+    MQManager::instance().publish("sql_queue", sql);
+}
 
 
 
