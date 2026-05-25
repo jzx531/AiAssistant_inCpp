@@ -18,6 +18,7 @@ const state = {
     gameOver: false,
     winner: emptyCell,
     lastMove: null,
+    aiThinking: false,
 };
 
 const padding = 30;
@@ -97,6 +98,8 @@ function updateInfo() {
         } else {
             statusEl.textContent = "对局结束：平局";
         }
+    } else if (state.aiThinking) {
+        statusEl.textContent = "AI 正在思考...";
     } else {
         statusEl.textContent = state.currentTurn === blackStone ? "当前轮到黑子" : "当前轮到白子";
     }
@@ -117,6 +120,7 @@ function resetBoard() {
     state.gameOver = false;
     state.winner = emptyCell;
     state.lastMove = null;
+    state.aiThinking = false;
     drawBoard();
     updateInfo();
 }
@@ -139,7 +143,7 @@ function getGridPosition(event) {
 }
 
 function placeStone(x, y, color) {
-    if (state.gameOver || state.board[y][x] !== emptyCell) {
+    if (state.gameOver || state.currentTurn !== color || state.board[y][x] !== emptyCell) {
         return false;
     }
 
@@ -186,6 +190,7 @@ async function sendMove(x, y) {
         });
 
         if (!response.ok) {
+            requestState();
             return;
         }
 
@@ -207,10 +212,19 @@ async function sendMove(x, y) {
         updateInfo();
     } catch (error) {
         console.warn("Failed to send move:", error);
+        requestState();
     }
 }
 
 async function requestAiMove() {
+    if (state.gameOver || state.currentTurn !== whiteStone || state.aiThinking) {
+        return;
+    }
+
+    state.aiThinking = true;
+    aiBtn.disabled = true;
+    updateInfo();
+
     try {
         const response = await fetch("/gomoku/ai-move", {
             method: "POST",
@@ -218,6 +232,7 @@ async function requestAiMove() {
         });
 
         if (!response.ok) {
+            requestState();
             return;
         }
 
@@ -245,6 +260,11 @@ async function requestAiMove() {
         updateInfo();
     } catch (error) {
         console.warn("Failed to request AI move:", error);
+        requestState();
+    } finally {
+        state.aiThinking = false;
+        aiBtn.disabled = false;
+        updateInfo();
     }
 }
 
@@ -261,6 +281,10 @@ async function resetRemoteBoard() {
 }
 
 canvas.addEventListener("click", (event) => {
+    if (state.gameOver || state.currentTurn !== blackStone) {
+        return;
+    }
+
     const position = getGridPosition(event);
     if (!position) {
         return;
