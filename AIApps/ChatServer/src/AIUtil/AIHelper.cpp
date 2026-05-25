@@ -84,10 +84,112 @@ std::string AIHelper::chat(int userId,std::string userName,std::string sessionId
         std::cout << "Tool calll success" << std::endl;
     }catch(const std::exception & e){
         //大多数情况都不会走这里
-        
+        std::string err = "[工具调用失败] " + std::string(e.what());
+        addMessage(userId, userName, true, userQuestion, sessionId);
+        addMessage(userId, userName, false, err, sessionId);
+
+        std::cout << "Tool call failed" << std::endl << std::string(e.what());
+        return err;
+    }
+
+    //第二次调用AI
+    //用同样的prompt_template，但说明工具执行过
+    std::string secondPrompt = config.buildToolResultPrompt(userQuestion, call.toolName, call.args, toolResult);
+
+    std::cout << "secondPrompt is" << secondPrompt << std::endl;
+
+    messages.push_back({secondPrompt,0});
+
+    json secondReq = strategy->buildRequest(this->messages);
+    json secondResp = executeCurl(secondReq);
+
+    std::string finalAnswer = strategy->parseResponse(secondResp);
+
+    //删除包含提示词的信息
+    messages.pop_back();
+
+    std::cout << "finalAnswer is" <<finalAnswer << std::endl;
+
+    addMessage(userId, userName, true, userQuestion, sessionId);
+    addMessage(userId, userName, false, finalAnswer, sessionId);
+    return finalAnswer;
+
+}
+
+//发送自定义请求体
+json AIHelper::request(const json & payload){
+    return executeCurl(payload);
+}
+
+std::vector<std::pair<std::string ,long long>> AIHelper::GetMessages(){
+    return this->messages;
+}
+
+// 内部方法：执行 curl 请求
+json AIHelper::executeCurl(const json & payload)
+{
+    CURL * curl = curl_easy_init();
+    if(!curl){
+        throw std::runtime_error("Failed to initialize curl");
+    }
+
+    std::cout<<"test "<< strategy->getApiUrl().c_str()<<' '<< strategy->getApiKey()<<std::endl;
+
+    std::string readBuffer;
+    struct curl_slist * headers = nullptr;
+    std::string authHeader = "Authorization: Bearer " + strategy->getApiKey();
+    
+    headers = curl_slist_append(headers, authHeader.c_str());
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    std::string payloadStr = payload.dump();
+
+    curl_easy_setopt(curl,CURLOPT_URL,strategy->getApiUrl().c_str());
+    curl_easy_setopt(curl,CURLOPT_HTTPHEADER,headers);
+    curl_easy_setopt(curl,CURLOPT_POSTFIELDS,payloadStr.c_str());
+    curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,WriteCallback);
+    curl_easy_setopt(curl,CURLOPT_WRITEDATA,&readBuffer);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        throw std::runtime_error("curl_easy_perform() failed: " + std::string(curl_easy_strerror(res)));
+    }
+
+    try {
+        return json::parse(readBuffer);
+    }
+    catch (...) {
+        throw std::runtime_error("Failed to parse JSON response: " + readBuffer);
     }
 }
 
+// curl 回调函数, 把返回的数据写到string buffer
+size_t AIHelper::WriteCallback(void *contents,size_t size,size_t nmemb, void* userp) {
+    size_t totalSize = size * nmemb;
+    std::string * buffer = static_cast<std::string *> (userp);
+    buffer->append(static_cast<const char *>(contents), totalSize);
+    return totalSize;
+}
+
+std::string AIHelper::escapeString(const std::string& input) {
+    std::string output;
+    output.reserve(input.size() * 2);
+    for(char c : input){
+        switch(c){
+            case '\\': output += "\\\\"; break;
+            case '\'': output += "\\\'"; break;
+            case '\"': output += "\\\""; break;
+            case '\n': output += "\\n"; break;
+            case '\r': output += "\\r"; break;
+            case '\t': output += "\\t"; break;
+            default:   output += c; break;
+        }
+    }
+    return output;
+}
 
 
 
