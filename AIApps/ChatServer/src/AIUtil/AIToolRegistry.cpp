@@ -75,3 +75,11 @@ json AIToolRegistry::getWeather(const json& args) {
     return json{ {"city", city}, {"weather", response} };
 }
 
+json AIToolRegistry::getTime(const json& args) {
+    (void)args;
+    std::time_t t = std::time(nullptr);
+    std::tm* now = std::localtime(&t);
+    char buffer[64];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", now);
+    return json{ {"time", buffer} };
+}
