@@ -4,6 +4,7 @@
 #include "../include/handlers/GomokuEntryHandler.h"
 #include "../include/handlers/GomokuAIMoveHandler.h"
 
+
 #include "../include/GomokuServer.h"
 
 using namespace http;
@@ -34,7 +35,31 @@ void GomokuServer::start()
 }
 
 void GomokuServer::initializeRouter() {
+    auto serveStaticFile = [this](const std::string& path,
+                                  const std::string& contentType,
+                                  const http::HttpRequest& req,
+                                  http::HttpResponse* resp) {
+        FileUtil fileOperater(path);
+        if (!fileOperater.isValid()) {
+            packageResp(req.getVersion(), http::HttpResponse::NotFound404,
+                "Not Found", true, "text/plain", 9, "Not Found", resp);
+            return;
+        }
+
+        std::vector<char> buffer(fileOperater.size());
+        fileOperater.readFile(buffer);
+        std::string body(buffer.data(), buffer.size());
+        packageResp(req.getVersion(), http::HttpResponse::Ok200,
+            "OK", false, contentType, static_cast<int>(body.size()), body, resp);
+    };
+
     httpServer_.Get("/gomoku", std::make_shared<GomokuEntryHandler>(this));
+    httpServer_.Get("/gomoku/gomoku.css", [serveStaticFile](const http::HttpRequest& req, http::HttpResponse* resp) {
+        serveStaticFile("../AIApps/GomokuServer/resource/gomoku.css", "text/css", req, resp);
+    });
+    httpServer_.Get("/gomoku/gomoku.js", [serveStaticFile](const http::HttpRequest& req, http::HttpResponse* resp) {
+        serveStaticFile("../AIApps/GomokuServer/resource/gomoku.js", "application/javascript", req, resp);
+    });
     httpServer_.Get("/gomoku/state", std::make_shared<GomokuStateHandler>(this));
     httpServer_.Post("/gomoku/move", std::make_shared<GomokuMoveHandler>(this));
     httpServer_.Post("/gomoku/reset", std::make_shared<GomokuResetHandler>(this));

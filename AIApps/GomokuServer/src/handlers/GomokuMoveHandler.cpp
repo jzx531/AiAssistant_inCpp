@@ -32,7 +32,8 @@ void GomokuMoveHandler::handle(const http::HttpRequest& req, http::HttpResponse*
             throw std::runtime_error("Not black player's turn");
         }
 
-        if(!game.placeStone(x, y, 1))
+        // 前端坐标约定为 x=列, y=行；棋盘内部存储为 board[row][col]。
+        if(!game.placeStone(y, x, 1))
         {
             throw std::runtime_error("Invalid move stone");  // Handle invalid move
         }

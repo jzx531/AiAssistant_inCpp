@@ -13,7 +13,8 @@ void GomokuResetHandler::handle(const http::HttpRequest& req, http::HttpResponse
 
         std::lock_guard<std::mutex> lock(server_->boardMapMutex);
         auto& game = server_->boardMap[sessionId];
-        game.resetGame();
+        // game.resetGame();
+        server_->boardMap[sessionId].resetGame();
         int winner = 0;
         json successResp;
         successResp["success"] = true;

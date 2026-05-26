@@ -13,7 +13,7 @@ class GomokuGame
 
 public:
     // 黑子为1，白子为2
-    GomokuGame(int boardSize = 32) : boardSize_(boardSize), currentPlayer_(1) { initBoard(); }
+    GomokuGame(int boardSize = 16) : boardSize_(boardSize), currentPlayer_(1) { initBoard(); }
     ~GomokuGame() = default;
 
     // 初始化棋盘
@@ -31,6 +31,8 @@ public:
     bool isBoardFull() const;
 
     json serialize() const;
+
+    std::vector<std::vector<int>> getBoard() const;
 
 private:
     std::vector<std::vector<int>> board_;

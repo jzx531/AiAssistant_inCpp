@@ -9,6 +9,9 @@
 #include "../../../HttpServer/include/http/HttpServer.h"
 #include "../../../HttpServer/include/utils/FileUtil.h"
 #include "../../../HttpServer/include/utils/JsonUtil.h"
+
+
+#include "../include/aigame/GomokuAI.h"
 #include "aigame/GomokuGame.h"
 
 class GomokuMoveHandler;
@@ -59,6 +62,9 @@ private:
     http::HttpServer httpServer_;
     std::unordered_map<std::string, GomokuGame> boardMap;
     std::mutex boardMapMutex;
+
+    std::unordered_map<std::string, std::shared_ptr<GomokuAI>> aiMap;
+    std::mutex aiMapMutex;
 };
 
 #endif

@@ -1,5 +1,27 @@
 #include "../include/aigame/GomokuGame.h"
 
+namespace {
+
+bool hasFiveInDirection(const std::vector<std::vector<int>>& board, int boardSize, int player, int row, int col, int rowStep, int colStep)
+{
+    for (int offset = 0; offset < 5; ++offset)
+    {
+        const int currentRow = row + offset * rowStep;
+        const int currentCol = col + offset * colStep;
+        if (currentRow < 0 || currentRow >= boardSize || currentCol < 0 || currentCol >= boardSize)
+        {
+            return false;
+        }
+        if (board[currentRow][currentCol] != player)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+}
+
 void GomokuGame::initBoard()
 {
     board_ = std::vector<std::vector<int>>(boardSize_, std::vector<int>(boardSize_, 0));
@@ -28,21 +50,19 @@ bool GomokuGame::placeStone(int row, int col, int player)
 
 bool GomokuGame::checkWin(int & winner)
 {
-    // Check rows
-    for (int i = 0; i < boardSize_; i++)
+    for (int row = 0; row < boardSize_; ++row)
     {
-        int count = 0;
-        for (int j = 0; j < boardSize_; j++)
+        for (int col = 0; col < boardSize_; ++col)
         {
-            if (board_[i][j] == currentPlayer_)
+            if (board_[row][col] != currentPlayer_)
             {
-                count++;
+                continue;
             }
-            else
-            {
-                count = 0;
-            }
-            if (count == 5)
+
+            if (hasFiveInDirection(board_, boardSize_, currentPlayer_, row, col, 0, 1)
+                || hasFiveInDirection(board_, boardSize_, currentPlayer_, row, col, 1, 0)
+                || hasFiveInDirection(board_, boardSize_, currentPlayer_, row, col, 1, 1)
+                || hasFiveInDirection(board_, boardSize_, currentPlayer_, row, col, 1, -1))
             {
                 winner = currentPlayer_;
                 return true;
@@ -50,65 +70,6 @@ bool GomokuGame::checkWin(int & winner)
         }
     }
 
-    // Check columns
-    for (int i = 0; i < boardSize_; i++)
-    {
-        int count = 0;
-        for (int j = 0; j < boardSize_; j++)
-        {
-            if (board_[j][i] == currentPlayer_)
-            {
-                count++;
-            }
-            else
-            {
-                count = 0;
-            }
-            if (count == 5)
-            {
-                winner = currentPlayer_;
-                return true;
-            }
-        }
-    }
-
-    // Check diagonals
-    int count = 0;
-    for (int i = 0; i < boardSize_; i++)
-    {
-        if (board_[i][i] == currentPlayer_)
-        {
-            count++;
-        }
-        else
-        {
-            count = 0;
-        }
-        if (count == 5)
-        {
-            winner = currentPlayer_;
-            return true;
-        }
-    }
-
-    //check other diagonal
-    count = 0;
-    for (int i = 0; i < boardSize_; i++)
-    {
-        if (board_[i][boardSize_ - 1 - i] == currentPlayer_)
-        {
-            count++;
-        }
-        else
-        {
-            count = 0;
-        }
-        if (count == 5)
-        {
-            winner = currentPlayer_;
-            return true;
-        }
-    }
     return false;
 }
 
@@ -143,6 +104,11 @@ bool GomokuGame::isBoardFull() const
 }
 
 json GomokuGame::serialize() const
+{
+    return board_;
+}
+
+std::vector<std::vector<int>> GomokuGame::getBoard() const
 {
     return board_;
 }
