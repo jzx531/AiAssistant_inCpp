@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 
+#include "../../../../HttpServer/include/utils/JsonUtil.h"
+
 class GomokuGame
 {
 
@@ -24,8 +26,11 @@ public:
     bool placeStone(int row, int col, int player);
     // 设置当前玩家
     void setCurrentPlayer(int player) ;
+    int getCurrentPlayer() const;
+    void switchPlayer();
+    bool isBoardFull() const;
 
-    std::string serialize();
+    json serialize() const;
 
 private:
     std::vector<std::vector<int>> board_;

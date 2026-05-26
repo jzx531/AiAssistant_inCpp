@@ -117,28 +117,32 @@ void GomokuGame::setCurrentPlayer(int player)
     currentPlayer_ = player;
 }
 
-std::string GomokuGame::serialize()
+int GomokuGame::getCurrentPlayer() const
 {
-    std::stringstream ss;
-    ss << "[";
-    for (int i = 0; i < boardSize_; i++)
+    return currentPlayer_;
+}
+
+void GomokuGame::switchPlayer()
+{
+    currentPlayer_ = currentPlayer_ == 1 ? 2 : 1;
+}
+
+bool GomokuGame::isBoardFull() const
+{
+    for (const auto& row : board_)
     {
-        ss << "[";
-        for (int j = 0; j < boardSize_; j++)
+        for (int cell : row)
         {
-            ss << board_[i][j];
-            if (j < boardSize_ - 1)
+            if (cell == 0)
             {
-                ss << ",";
+                return false;
             }
         }
-        ss << "]";
-        if (i < boardSize_ - 1)
-        {
-            ss << ",";
-        }
     }
-    ss << "]";
+    return true;
+}
 
-    return ss.str();
+json GomokuGame::serialize() const
+{
+    return board_;
 }

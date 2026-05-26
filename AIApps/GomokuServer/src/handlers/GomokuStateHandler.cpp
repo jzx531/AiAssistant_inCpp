@@ -1,22 +1,9 @@
-#include "../include/handlers/GomokuMoveHandler.h"
+#include "../include/handlers/GomokuStateHandler.h"
 
-void GomokuMoveHandler::handle(const http::HttpRequest& req, http::HttpResponse* resp)
+void GomokuStateHandler::handle(const http::HttpRequest& req, http::HttpResponse* resp)
 {
-    auto contentType = req.getHeader("Content-Type");
-    if(contentType.empty() || contentType != "application/json" || req.getBody().empty())
-    {
-        LOG_INFO << "content" << req.getBody();
-        resp->setStatusLine(req.getVersion(), http::HttpResponse::BadRequest400, "Bad Request");
-        resp->setCloseConnection(true);
-        resp->setContentType("application/json");
-        resp->setContentLength(0);
-        resp->setBody("");
-        return;
-    }
+    
     try{
-        json request = json::parse(req.getBody());
-        int x = request["x"];
-        int y = request["y"];
         auto session = server_->getSessionManager()->getSession(req, resp);
 
         if(!session){
@@ -26,29 +13,13 @@ void GomokuMoveHandler::handle(const http::HttpRequest& req, http::HttpResponse*
 
         std::lock_guard<std::mutex> lock(server_->boardMapMutex);
         auto& game = server_->boardMap[sessionId];
-
-        if (game.getCurrentPlayer() != 1)
-        {
-            throw std::runtime_error("Not black player's turn");
-        }
-
-        if(!game.placeStone(x, y, 1))
-        {
-            throw std::runtime_error("Invalid move stone");  // Handle invalid move
-        }
-
         int winner = 0;
         bool isWin = game.checkWin(winner);
         bool isDraw = !isWin && game.isBoardFull();
-        if (!isWin && !isDraw)
-        {
-            game.switchPlayer();
-        }
 
         json successResp;
-        successResp["success"] = true;
         successResp["board"] = game.serialize();
-        successResp["nextTurn"] = isWin || isDraw ? game.getCurrentPlayer() : 2;
+        successResp["nextTurn"] = game.getCurrentPlayer();
         successResp["gameOver"] = isWin || isDraw;
         successResp["winner"] = winner;
         
