@@ -43,6 +43,8 @@ include_directories(
 
     ${PROJECT_SOURCE_DIR}/HttpServer/include
     ${PROJECT_SOURCE_DIR}/AIApps/ChatServer/include
+    ${PROJECT_SOURCE_DIR}/AIApps/GomokuServer/include
+
 
     /usr/include/mysql-cppconn-8
     /usr/include/mysql
@@ -73,6 +75,11 @@ file(GLOB_RECURSE CHAT_SERVER_SRC
     "${PROJECT_SOURCE_DIR}/AIApps/ChatServer/src/*.cpp"
 )
 
+# Gomoku Server
+file(GLOB_RECURSE GOMOKU_SERVER_SRC
+    "${PROJECT_SOURCE_DIR}/AIApps/GomokuServer/src/*.cpp"
+)
+
 # Project Source
 file(GLOB_RECURSE PROJECT_SRC
     "${PROJECT_SOURCE_DIR}/src/*.cpp"
@@ -86,6 +93,7 @@ add_executable(AiAssistant_inCpp
     ${PROJECT_SRC}
     ${HTTP_SERVER_SRC}
     ${CHAT_SERVER_SRC}
+    ${GOMOKU_SERVER_SRC}
 )
 
 # =========================

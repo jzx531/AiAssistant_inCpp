@@ -19,6 +19,9 @@ public:
     // 响应后处理
     virtual void after(HttpResponse & response) = 0;
 
+    // 响应后处理
+    // virtual void after(HttpRequest & request,HttpResponse & response) = 0;
+
     //设置下一个中间件
     void setNext(std::shared_ptr<Middleware> next)
     {

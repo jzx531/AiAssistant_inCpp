@@ -23,6 +23,7 @@ void CorsMiddleware::before(HttpRequest & request)
     }
 }
 
+
 void CorsMiddleware::after(HttpResponse & response)
 {
     LOG_DEBUG << "CorsMiddleware::after - Processing response";
@@ -43,6 +44,26 @@ void CorsMiddleware::after(HttpResponse & response)
         }
     }
 }
+
+// void CorsMiddleware::after(HttpRequest & request, HttpResponse & response)
+// {
+//     LOG_DEBUG << "CorsMiddleware::after - Processing response";
+
+//     if (!config_.allowedOrigins.empty()) {
+//         const std::string &origin = request.getHeader("Origin");
+        
+//         // 1. 如果配置了允许所有源，且不需要携带凭证，才用 *
+//         bool hasWildcard = std::find(config_.allowedOrigins.begin(), config_.allowedOrigins.end(), "*") != config_.allowedOrigins.end();
+        
+//         // 2. 如果要携带 Credentials，绝对不能用 *，必须返回具体的 Origin
+//         if (hasWildcard && !config_.allowCredentials) {
+//             addCorsHeaders(response, "*");
+//         } else if (!origin.empty() && isOriginAllowed(origin)) {
+//             // ⭐ 核心：动态返回前端实际请求的 Origin
+//             addCorsHeaders(response, origin);
+//         }
+//     }
+// }
 
 bool CorsMiddleware::isOriginAllowed(const std::string &origin) const
 {
