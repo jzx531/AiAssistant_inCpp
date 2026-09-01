@@ -804,3 +804,173 @@ callback(newReq, resp);
 2. 把 `param1` 风格改成保留真实参数名的实现
 
 这样你就不只是“看懂 Router”，而是真正能改它、扩它了。
+
+---
+
+## 20. Router 与 Middleware 具体是怎么被调用的
+
+这一节从「调用」角度，把 Router 和 Middleware 的协作关系讲清楚。它们不是各自独立被调用的，而是：
+
+- 启动阶段由业务代码**注册**
+- 请求阶段由 `HttpServer` 按固定顺序**回调**
+
+### 20.1 分两条线理解
+
+要理解它们的调用，最好拆成两阶段：
+
+```text
+第一阶段：注册（启动时）
+  业务层声明 → HttpServer 封装 → Router / MiddlewareChain 保存
+
+第二阶段：调用（请求到达时）
+  muduo 回调 → HttpServer 调度 → Middleware 包裹 Router → Router 交给 Handler
+```
+
+### 20.2 注册阶段：Get/Post/addMiddleware 是薄封装
+
+业务入口 `ChatServer::initializeRouter()` 和 `initializeMiddleware()` 只负责声明，底层操作被 `HttpServer` 封装：
+
+```cpp
+// ChatServer.cpp:142
+void ChatServer::initializeMiddleware(){
+    auto corsMiddleware = std::make_shared<http::middleware::CorsMiddleware>();
+    httpServer_.addMiddleware(corsMiddleware);   // → middlewareChain_.addMiddleware
+}
+
+// ChatServer.cpp:104
+void ChatServer::initializeRouter() {
+    httpServer_.Post("/login", std::make_shared<ChatLoginHandler>(this)); // → router_.registerHandler
+    httpServer_.Get("/chat",  std::make_shared<ChatHandler>(this));
+    ...
+}
+```
+
+`HttpServer` 的 `Get/Post/addMiddleware` 是**薄封装**，最终落到两个成员上：
+
+```cpp
+// HttpServer.h:57-98
+void Get(const std::string &path, HandlerPtr handler)
+{ router_.registerHandler(HttpRequest::Get, path, std::move(handler)); }
+
+void Post(const std::string &path, HandlerPtr handler)
+{ router_.registerHandler(HttpRequest::Post, path, std::move(handler)); }
+
+void addMiddleware(std::shared_ptr<middleware::Middleware> m)
+{ middlewareChain_.addMiddleware(m); }
+```
+
+- `registerHandler` → `handlers_[RouteKey{method,path}] = handler`（精准表）
+- `addMiddleware` → `middlewares_.push_back(m)`（一个 vector）
+
+### 20.3 调用阶段：handleRequest 是调度中枢
+
+真正的调用链在 `HttpServer::handleRequest`（`HttpServer.cpp:156`），它是 `httpCallback_` 绑定的目标：
+
+```cpp
+HttpServer::HttpServer(...)
+  : httpCallback_(std::bind(&HttpServer::handleRequest, this, _1, _2)) { initialize(); }
+```
+
+数据从网络一路流到这里：
+
+```text
+onMessage(conn, buf, time)          // muduo 消息回调
+  → HttpContext::parseRequest(buf)  // 状态机解析
+  → if (gotAll()) onRequest(conn, request)
+  → onRequest 里 httpCallback_(req, &response)   // 默认就是 handleRequest
+  → handleRequest(req, resp)
+```
+
+`handleRequest` 内部就是 Router 和 Middleware 的调用顺序（**中间件包裹路由**）：
+
+```cpp
+void HttpServer::handleRequest(const HttpRequest &req, HttpResponse *resp) {
+    try {
+        HttpRequest mutableReq = req;
+        middlewareChain_.processBefore(mutableReq);   // ① 请求前：中间件 before
+
+        if (!router_.route(mutableReq, resp)) {       // ② 路由：分发到 handler
+            resp->setStatusCode(HttpResponse::NotFound404);
+            ...
+        }
+
+        middlewareChain_.processAfter(*resp);         // ③ 响应后：中间件 after（逆序）
+    }
+    catch (const HttpResponse& res) {                 // ④ 中间件短路（CORS 预检 throw）
+        *resp = res;
+    }
+    catch (const std::exception& e) {
+        resp->setStatusCode(HttpResponse::InternalServerError500);
+        resp->setBody(e.what());
+    }
+}
+```
+
+### 20.4 Middleware 的调用
+
+```cpp
+// MiddlewareChain.cpp
+void processBefore(HttpRequest &request) {
+    for (auto &m : middlewares_) m->before(request);          // 顺序执行
+}
+void processAfter(HttpResponse &response) {
+    for (auto it = middlewares_.rbegin(); it != rend(); ++it) // 逆序执行
+        (*it)->after(response);
+}
+```
+
+- **before 顺序**、**after 逆序**（洋葱模型）。
+- 短路机制：`CorsMiddleware::before` 对 `OPTIONS` 预检 `throw HttpResponse`，被上面 `catch (const HttpResponse&)` 接住，直接当成最终响应返回，跳过路由。
+
+### 20.5 Router 的调用
+
+```cpp
+// Router.cpp:20  Router::route
+RouteKey key{req.method(), req.path()};
+auto it = handlers_.find(key);            // ① 精准 Handler（哈希 O(1)）
+if (it != handlers_.end()) { it->second->handle(req, resp); return true; }
+
+auto cbit = callbacks_.find(key);         // ② 精准 callback
+if (cbit != callbacks_.end()) { cbit->second(req, resp); return true; }
+
+for (auto &[m, re, h] : regexHandlers_) { // ③ 动态 Handler（正则遍历）
+    if (m == req.method() && regex_match(pathStr, match, re)) {
+        HttpRequest newReq(req);
+        extractPathParameters(match, newReq);
+        h->handle(newReq, resp); return true;
+    }
+}
+// ④ 动态 callback 同理
+return false;                              // 全部未命中 → 上层返回 404
+```
+
+命中顺序：**精准 Handler → 精准 callback → 动态 Handler → 动态 callback**。
+
+### 20.6 完整调用时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant M as muduo
+    participant HS as HttpServer
+    participant MW as MiddlewareChain
+    participant R as Router
+    participant H as Handler
+
+    M->>HS: onMessage(conn, buf)
+    HS->>HS: HttpContext::parseRequest → gotAll()
+    HS->>HS: onRequest → httpCallback_(req, resp)
+    HS->>MW: processBefore(mutableReq)
+    MW->>MW: CORS.before 顺序执行
+    HS->>R: route(mutableReq, resp)
+    R->>H: handler->handle(req, resp)
+    H-->>R: 填 resp
+    R-->>HS: return true
+    HS->>MW: processAfter(resp)
+    MW->>MW: CORS.after 逆序执行
+    HS->>M: appendToBuffer → conn->send
+```
+
+### 20.7 一句话总结
+
+业务代码只负责「注册」，`HttpServer` 负责「调度」——请求经 `onMessage → onRequest → handleRequest`，在 `handleRequest` 里按 `before → route → after` 的顺序，让 Middleware 包裹 Router，Router 再把请求交给具体 Handler。
